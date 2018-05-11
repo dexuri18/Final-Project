@@ -1,4 +1,4 @@
-# Final Project
+# Final Project BIO 539
 # Coral Cover Comparison by Zone on Anambas Islands Marine Protected Area
 ## Authors
 Deky Rahma Sukarno
