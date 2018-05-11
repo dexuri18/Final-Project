@@ -1,0 +1,165 @@
+---
+title: "Coral Cover Comparison by Zone on Anambas Islands Marine Protected Area"
+author: "Deky Rahma Sukarno"
+date: "May 10, 2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(gridExtra)
+library("ggpubr")
+```
+
+### Background
+Anambas Islands are reserved as Marine Protected Area (MPA) on July 6, 2011, through the Decree of the Minister of Marine Affairs and Fisheries of the Republic of Indonesia No. KEP.35 / MEN / 2011 with total area 1,262,686.2 ha. In order to realize the effective and sustainable management of the area, the management of Anambas Islands Marine Protected Area (AIMPA) is done based on its Management and Zoning Plans. Zoning of MPA is a form of engineering of space utilization in MPA through the establishment of functional boundaries in accordance with the potential of resources and carrying capacity, as well as ecological processes that take place as a single unity of ecosystems.  The zoning of an MPA consists of core zone, sustainable fishery zone, utilization zone and rehabilitation zones.
+
+According to Management and Zoning Plans Document of AIMPA (2014), the core zone of AIMPA is designed to protect the habitat of coral reef ecosystems, turtle nesting beaches, and spawning places for fish not to be disturbed by human activities, spread at 26 locations with a total area of 30,328.58 ha. The sustainable fishery zone occupies an area of 1,222,498.99 ha, designated as a location for conducting fisheries activities for people around the area, especially fishing activities and aquaculture especially marine aquaculture activities (mariculture). The utilization zone has a total area of 9,387.77 ha spread over 27 locations with general designations such as diving, snorkeling, beach tourism, photo, filmmaking, and outbound training. Zone Rehabilitation is a zone for rehabilitation or recovery of sites that have experienced environmental degradation, both ecosystem damage and resource depletion with a total area of 470.85 ha.
+
+Comparison analysis of coral cover conditions was carried out to determine the extent of management effect that has been done since the establishment of zonation for MTP of Anambas Islands against existing coral cover conditions.
+
+### Summary of the Data
+Data on coral cover conditions were collected through surveys on permanent transects placed in every zone in AIMPA, except for sustainable fisheries zones because these zones tend to have depth characteristics where coral reefs are not found. The analysis was conducted using survey data in 2015 because data in that year was successfully surveyed in most of the existing zoning. However, not all data types have been successfully extracted from every permanent transect. Here is the percentage of completeness of data, where only complete data which will then be analyzed.
+
+```{r plot1, echo=FALSE}
+#load the data
+surveys <- read.csv("coralreef_anb_2015.csv")
+
+#clean the data from NA and blank value
+cov_zone_surveys_complete <- surveys %>%
+  filter(!is.na(coral_coverage)) %>%
+  filter(!is.na(pH)) %>%
+  filter(!is.na(salinity)) %>%
+  filter(!is.na(do)) %>%
+  filter(zone !="") %>%
+  filter(zone1 !="")
+
+#piechart of the records
+count_all <- surveys %>% tally()
+cov_zone_count_complete <- surveys %>%
+  filter(!is.na(coral_coverage)) %>%
+  filter(zone !="") %>%
+  tally()
+
+cov_zone_count_uncomplete <- count_all - cov_zone_count_complete
+
+slices <- c(cov_zone_count_uncomplete[1,1],cov_zone_count_complete[1,1])
+lbls <- c("uncomplete records", "complete records")
+pct <- round(slices/sum(slices)*100)
+lbls <- paste(lbls, pct) # add percents to labels 
+lbls <- paste(lbls,"%",sep="") # ad % to labels 
+pie(slices,labels = lbls,
+    main="Pie Chart of Data Completeness")
+```
+
+The data completeness analysis shows that out of the total `r surveys %>% tally()` recorded data there is only `r cov_zone_count_complete %>% tally()` (`r (cov_zone_count_complete / count_all )*100`%) complete, the rest `r cov_zone_count_uncomplete %>% tally()` (`r (cov_zone_count_uncomplete / count_all )*100 `%) is incomplete.
+
+### Coral Cover for Each Zone
+Comparison of coral cover for each zone is done using only the complete data. The comparison is done to see the level of coral cover in each zone. There are some permanent transect stations located outside the AIMPA area used in the comparison. Here are the results of the comparison of coral cover of each zone.
+
+```{r plot2, echo=FALSE}
+#load the data
+surveys <- read.csv("coralreef_anb_2015.csv")
+
+#clean the data from NA and blank value
+cov_zone_surveys_complete <- surveys %>%
+  filter(!is.na(coral_coverage)) %>%
+  filter(!is.na(pH)) %>%
+  filter(!is.na(salinity)) %>%
+  filter(!is.na(do)) %>%
+  filter(zone !="") %>%
+  filter(zone1 !="")
+
+#plot coverage per zone
+ggplot(cov_zone_surveys_complete, aes(x = zone, y = coral_coverage)) + geom_boxplot()+xlab("Zone")
+
+```
+
+The graph shows that the highest coral cover is found in the core zone, followed by the utilization zone, while the rehabilitation zone has the lowest coral cover. It is surprising that the condition of coral cover outside AIMPA as a comparison has coral cover that is not far from the core zone or utilization zone, and is better than the rehabilitation zone.
+
+### Coral Cover Between Core Zone and Other Zone
+Furthermore, to see the extent of the conditions of zones that specifically being protected and restricted with those not, comparison of coral cover in core zones with other zones (utilization zone, rehabilitation zone, and also outside the region) is done, with the following results.
+
+```{r plot3, echo=FALSE}
+#load the data
+surveys <- read.csv("coralreef_anb_2015.csv")
+
+#clean the data from NA and blank value
+cov_zone_surveys_complete <- surveys %>%
+  filter(!is.na(coral_coverage)) %>%
+  filter(!is.na(pH)) %>%
+  filter(!is.na(salinity)) %>%
+  filter(!is.na(do)) %>%
+  filter(zone !="") %>%
+  filter(zone1 !="")
+
+#plot coverage per zone
+ggplot(cov_zone_surveys_complete, aes(x = zone1, y = coral_coverage)) + geom_boxplot()+xlab("Zone")
+
+```
+
+From the graph it is seen that the average coral cover in the core zone, where special safeguards are carried out, still has a higher value than the average coral cover of the other zone. However, to see the extent of the significant level of this difference then conducted T-Test test with the results as follows.
+
+```{r plot4, echo=FALSE}
+#load the data
+surveys <- read.csv("coralreef_anb_2015.csv")
+
+#clean the data from NA and blank value
+cov_zone_surveys_complete <- surveys %>%
+  filter(!is.na(coral_coverage)) %>%
+  filter(!is.na(pH)) %>%
+  filter(!is.na(salinity)) %>%
+  filter(!is.na(do)) %>%
+  filter(zone !="") %>%
+  filter(zone1 !="")
+
+#T-Test
+t.test(coral_coverage ~ zone1, data = cov_zone_surveys_complete, var.equal = FALSE)
+```
+
+Based on the result, it can be said that at 95% confidence level, there is no significant difference (p-value = 0.6585) of the two means. Here we should accept the null hypothesis that the two means are equal because the p-value is larger than 0.05. The maximum difference of the mean can be as low as -5.59 and as high as 8.81. Or in other word, **there is no difference in coral cover among the core zone and the other zone**.
+
+### Conclusion and Recomendation
+From the analyzes conducted, based on permanent transect survey data conducted in 2015 can be summarized as follows:
+
++ Although permanent transect surveys are conducted at all existing zone stations, only 90% are complete and further analysis is possible.
+
++ Of all the zones present in AIMPA, the core zone has the highest average coral cover, followed by the utilization zone, as well as stations outside AIMPA. The rehabilitation zone has the lowest coral cover among all zones.
+
++ The core zone has a higher average than other zones, but based on the T-Test it is concluded that there is no significant difference between the coral cover in the core zone and the other zone.
+
+However, there are things to consider and also recommended, including:
+
++ Coral reefs have very slow growth rates. Barnes (1987) in NOAA (2017) stated that coral reef has growth rates of 0.3 to 2 centimeters per year for massive corals, and up to 10,000 years for a coral reef to form from a group of larvae. In this regard, with the new AIMPA management period starting in 2014 it is possible in 2015 to see no significant difference to the existing coral cover conditions.
+
++ Preliminary and post-management data are required to see changes in existing coral reef conditions resulting from the management being undertaken. Therefore, taking coral reef condition data on a regular basis (time series) needs to be done.
+
++ The condition of coral cover in core zones that are not significantly different from other zones is an early signal of the effectiveness of existing management, the managers of the region need to review the management strategy to obtain more effective results
+
+###References
+
+*LKKPN Pekanbaru. 2015. Permanent Transect Survei of Coral Reef in Anambas Islands Marine Protected Area. Data Collections*
+
+*NOAA.2017. How Do Coral Reefs Form?. https://oceanservice.noaa.gov/education/kits/corals/coral04_reefs.html*
+
+*Republic of Indonesia. 2011. Minister of Marine Affairs and Fisheries Decree No. KEP.35 / MEN / 2011 on Reservation of Anambas Islands as Marine Protected Area*
+
+*Republic of Indonesia. 2014. Minister of Marine Affairs and Fisheries Decree No. KEP.53 / MEN / 2014 on management and Zoning Plans of Anambas Islands Marine Protected Area*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
